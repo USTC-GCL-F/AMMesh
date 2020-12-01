@@ -14,6 +14,8 @@ add_library(ACAM_mesh STATIC
 	src/PolyMeshIterators.cpp
 )
 
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib) #设置库文件的输出目录
+
 target_include_directories(ACAM_mesh
     PUBLIC 
         ${PROJECT_SOURCE_DIR}/include
@@ -33,4 +35,24 @@ add_executable(ACAM_example
 target_link_libraries( ACAM_example
     PRIVATE 
         ACAM_mesh
+)
+
+############################################################
+# Project Homework 1
+############################################################
+
+file (GLOB HW1_FILE
+    src/hw1/*.cpp
+)
+
+# Add an executable with the above sources
+add_executable(${PROJECT_NAME}_HW1 ${HW1_FILE})
+target_include_directories(${PROJECT_NAME}_HW1
+    PRIVATE 
+        ${PROJECT_SOURCE_DIR}/include
+)
+
+target_link_libraries(${PROJECT_NAME}_HW1
+    optimized ${PROJECT_SOURCE_DIR}/lib/Release/ACAM_mesh.lib
+    debug ${PROJECT_SOURCE_DIR}/lib/Debug/ACAM_mesh.lib
 )
