@@ -12,7 +12,7 @@ void main(int argc, char** argv)
 	//alien.obj 1 v.txt path.txt
 	if (argc != 4)
 	{
-		std::cout << "========== Usage  ==========\n";
+		std::cout << "========== Hw1 Usage  ==========\n";
 		std::cout << std::endl;
 		std::cout << "ShortestPath:	hw1.exe	alien.obj	vertices.txt	path.txt\n";
 		std::cout << "MST:		hw1.exe	alien.obj	vertices.txt	path.txt\n";

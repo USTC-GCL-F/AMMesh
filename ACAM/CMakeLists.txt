@@ -14,7 +14,7 @@ add_library(ACAM_mesh STATIC
 	src/PolyMeshIterators.cpp
 )
 
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib) #设置库文件的输出目录
+#SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib) #设置库文件的输出目录
 
 target_include_directories(ACAM_mesh
     PUBLIC 
@@ -53,6 +53,27 @@ target_include_directories(${PROJECT_NAME}_HW1
 )
 
 target_link_libraries(${PROJECT_NAME}_HW1
-    optimized ${PROJECT_SOURCE_DIR}/lib/Release/ACAM_mesh.lib
-    debug ${PROJECT_SOURCE_DIR}/lib/Debug/ACAM_mesh.lib
+    PRIVATE 
+        ACAM_mesh
+)
+
+############################################################
+# Project Homework 3
+############################################################
+
+file (GLOB HW3_FILE
+    src/hw3/*.cpp
+)
+
+# Add an executable with the above sources
+add_executable(${PROJECT_NAME}_HW3 ${HW3_FILE})
+target_include_directories(${PROJECT_NAME}_HW3
+    PRIVATE 
+        ${PROJECT_SOURCE_DIR}/include
+        D:/LIBRARY/Eigen
+)
+
+target_link_libraries(${PROJECT_NAME}_HW3
+    PRIVATE 
+        ACAM_mesh
 )
