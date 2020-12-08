@@ -45,7 +45,7 @@ void Dijkstra(PolyMesh& Mesh, int s_p, int e_p, std::vector<int>& path)
 
 void Dijkstra_group(PolyMesh& Mesh, std::vector<int>& lmk, std::vector<std::vector<int>>& path)
 {
-	std::sort(lmk.begin(), lmk.end());
+	//std::sort(lmk.begin(), lmk.end());
 	std::priority_queue<PathInfo> complete_graph;
 	//#pragma omp parallel for
 	for (int i = 0; i < lmk.size() - 1; i++)
@@ -71,7 +71,7 @@ void Dijkstra_group(PolyMesh& Mesh, std::vector<int>& lmk, std::vector<std::vect
 			{
 				continue;
 			}
-			if (is_lmk[tmp.id] == 1)
+			if (is_lmk[tmp.id] == 1)//Ê²Ã´¹í
 			{
 				count--;
 				is_lmk[tmp.id] = 0;
