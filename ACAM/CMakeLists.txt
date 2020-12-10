@@ -19,6 +19,7 @@ add_library(ACAM_mesh STATIC
 target_include_directories(ACAM_mesh
     PUBLIC 
         ${PROJECT_SOURCE_DIR}/include
+        
 )
 
 
@@ -70,6 +71,7 @@ add_executable(${PROJECT_NAME}_HW3 ${HW3_FILE})
 target_include_directories(${PROJECT_NAME}_HW3
     PRIVATE 
         ${PROJECT_SOURCE_DIR}/include
+        D:/LIBRARY/Eigen
 )
 
 target_link_libraries(${PROJECT_NAME}_HW3

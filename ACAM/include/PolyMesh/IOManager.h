@@ -36,9 +36,9 @@ struct IOOptions
     }
 };
 
-bool loadMesh(const std::string& _filename, PolyMesh* mesh);
+bool loadMesh(const std::string& _filename, PolyMesh *&mesh);
 
-bool loadMesh(const std::string& _filename, PolyMesh* mesh, IOOptions& opt);
+bool loadMesh(const std::string& _filename, PolyMesh *&mesh, IOOptions& opt);
 
 bool writeMesh(const std::string& _filename, PolyMesh* mesh);
 
@@ -89,17 +89,17 @@ private:
 
         void set_Kd(float r, float g, float b)
         {
-            Kd_ = RGBf(r, g, b); Kd_is_set_ = true;
+            Kd_ = MRGBf(r, g, b); Kd_is_set_ = true;
         }
 
         void set_Ka(float r, float g, float b)
         {
-            Ka_ = RGBf(r, g, b); Ka_is_set_ = true;
+            Ka_ = MRGBf(r, g, b); Ka_is_set_ = true;
         }
 
         void set_Ks(float r, float g, float b)
         {
-            Ks_ = RGBf(r, g, b); Ks_is_set_ = true;
+            Ks_ = MRGBf(r, g, b); Ks_is_set_ = true;
         }
 
         void set_Tr(float t)
@@ -112,18 +112,18 @@ private:
             map_Kd_ = _name, index_Kd_ = _index_Kd; map_Kd_is_set_ = true;
         };
 
-        const RGBf& Kd(void) const { return Kd_; }
-        const RGBf& Ka(void) const { return Ka_; }
-        const RGBf& Ks(void) const { return Ks_; }
+        const MRGBf& Kd(void) const { return Kd_; }
+        const MRGBf& Ka(void) const { return Ka_; }
+        const MRGBf& Ks(void) const { return Ks_; }
         float  Tr(void) const { return Tr_; }
         const std::string& map_Kd(void) { return map_Kd_; }
         const int& map_Kd_index(void) { return index_Kd_; }
 
     private:
 
-        RGBf Kd_;                          bool Kd_is_set_; // diffuse
-        RGBf Ka_;                          bool Ka_is_set_; // ambient
-        RGBf Ks_;                          bool Ks_is_set_; // specular
+        MRGBf Kd_;                          bool Kd_is_set_; // diffuse
+        MRGBf Ka_;                          bool Ka_is_set_; // ambient
+        MRGBf Ks_;                          bool Ks_is_set_; // specular
         float Tr_;                          bool Tr_is_set_; // transperency
 
         std::string map_Kd_; int index_Kd_; bool map_Kd_is_set_; // Texture
@@ -184,12 +184,12 @@ private:
     mutable std::string path_;
     mutable std::string objName_;
 
-    mutable std::vector< RGBf > material_;
-    mutable std::vector< RGBAf > materialA_;
+    mutable std::vector< MRGBf > material_;
+    mutable std::vector< MRGBAf > materialA_;
 
-    size_t getMaterial(RGBf& color) const;
+    size_t getMaterial(MRGBf& color) const;
 
-    size_t getMaterial(RGBAf& color) const;
+    size_t getMaterial(MRGBAf& color) const;
 
     bool writeMaterial(std::ostream& _out, PolyMesh* mesh, IOOptions) const;
 

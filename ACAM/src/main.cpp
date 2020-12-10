@@ -1,247 +1,248 @@
 #include "PolyMesh\IOManager.h"
+#include "Eigen/Dense"
+#include <queue>
+#include <map>
+#include <time.h>
+
+#define lambda 1e3
 
 using namespace acamcad;
 using namespace polymesh;
 
-void testBasicTriangle()
+struct Edge_priority
 {
-	PolyMesh* mesh = new PolyMesh();
-	std::cout << "add v0, v1, v2" << std::endl;
+	double cost;
+	MEdge* eh;
+	int state;
+	MPoint3 NewPoint;
+};
 
-	auto v0 = mesh->addVertex(0, 0, 0);
-	auto v1 = mesh->addVertex(1, 0, 0);
-	auto v2 = mesh->addVertex(0, 1, 0);
-
-	std::cout << "add p0" << std::endl;
-	std::vector<MVert*> vertlist; vertlist.push_back(v0); vertlist.push_back(v1); vertlist.push_back(v2);
-	auto p0 = mesh->addPolyFace(vertlist);
-
-	writeMesh("triangle.obj", mesh);
-	delete(mesh);
-}
-
-void exampleSplitTriangle()
+struct cmp
 {
-	std::cout
-		<< "----------------------" << std::endl
-		<< "    test SplitEdge    " << std::endl
-		<< "----------------------" << std::endl;
-
-	// v2---v3
-	// | \	|
-	// |  \ |
-	// |   \|
-	// v0---v1
-
-	PolyMesh* mesh = new PolyMesh();
-
-	MVert* v0 = mesh->addVertex(0, 0, 0);
-	MVert* v1 = mesh->addVertex(1, 0, 0);
-	MVert* v2 = mesh->addVertex(0, 1, 0);
-	MVert* v3 = mesh->addVertex(1, 1, 0);
-
-	std::vector<MVert*> vertlist; vertlist.push_back(v0); vertlist.push_back(v1); vertlist.push_back(v2);
-	MPolyFace* p0 = mesh->addPolyFace(vertlist);
-	vertlist.clear();
-	vertlist.push_back(v1); vertlist.push_back(v3); vertlist.push_back(v2);
-	MPolyFace* p1 = mesh->addPolyFace(vertlist);
-	writeMesh("split_before.obj", mesh);
-
-	MEdge* e12 = mesh->edgeBetween(v1, v2);	//get the edge between to vertex
-	MVert * v4 = mesh->splitEdgeTriangle(e12);
-	v4->setPosition(0.5, 0.6, 0.1);
-
-	MEdge* e10 = mesh->edgeBetween(v0, v1);
-	MVert* v5 = mesh->splitEdgeTriangle(e10);
-	writeMesh("split_after.obj", mesh);
-	delete(mesh);
-
-}
-
-void exampleFlipTriangle()
-{
-	std::cout
-		<< "-----------------------" << std::endl
-		<< "      test FlipEdge    " << std::endl
-		<< "-----------------------" << std::endl;
-
-	// v2---v3
-	// | \	|
-	// |  \ |
-	// |   \|
-	// v0---v1
-
-	PolyMesh* mesh = new PolyMesh();
-
-	MVert* v0 = mesh->addVertex(0, 0, 0);
-	MVert* v1 = mesh->addVertex(1, 0, 0);
-	MVert* v2 = mesh->addVertex(0, 1, 0);
-	MVert* v3 = mesh->addVertex(1, 1, 0);
-
-	std::vector<MVert*> vertlist; vertlist.push_back(v0); vertlist.push_back(v1); vertlist.push_back(v2);
-	MPolyFace* p0 = mesh->addPolyFace(vertlist);
-	vertlist.clear();
-	vertlist.push_back(v1); vertlist.push_back(v3); vertlist.push_back(v2);
-	MPolyFace* p1 = mesh->addPolyFace(vertlist);
-    writeMesh("flip_before.obj", mesh);
-
-	MEdge* e12 = mesh->edgeBetween(v1, v2);
-	mesh->flipEdgeTriangle(e12);
-	writeMesh("flip_after.obj", mesh);
-	delete(mesh);
-}
-
-void exampleCollapseTriangle()
-{
-	// test collapse edge
-	std::cout
-		<< "-------------------------" << std::endl
-		<< "    test CollapseEdge    " << std::endl
-		<< "-------------------------" << std::endl;
-
-	PolyMesh* mesh = new PolyMesh();
-	
-	MVert* v0 = mesh->addVertex(0, 0, 0);
-	MVert* v1 = mesh->addVertex(1, 0, 0);
-	MVert* v2 = mesh->addVertex(0, 1, 0);
-	MVert* v3 = mesh->addVertex(1, 1, 0);
-
-	std::vector<MVert*> vertlist; vertlist.push_back(v0); vertlist.push_back(v1); vertlist.push_back(v2);
-	MPolyFace* p0 = mesh->addPolyFace(vertlist);
-	vertlist.clear();
-	vertlist.push_back(v1); vertlist.push_back(v3); vertlist.push_back(v2);
-	MPolyFace* p1 = mesh->addPolyFace(vertlist);
-
-	MEdge* e12 = mesh->edgeBetween(v1, v2);
-	MVert* v4 = mesh->splitEdgeTriangle(e12);
-	v4->setPosition(0.5, 0.6, 0.1);
-
-	MEdge* e34 = mesh->edgeBetween(v4, v3);
-	MVert* v5 = mesh->splitEdgeTriangle(e34);
-	v5->setPosition(0.6, 0.6, 0.1);
-	writeMesh("collapse_before.obj", mesh);
-
-	//MHalfedge* he54 = mesh->halfedgeBetween(v5, v4);
-	//mesh->collapseTriangle(he54);
-	//Print(mesh);
-
-	MHalfedge* he45 = mesh->halfedgeBetween(v4, v5);
-	mesh->collapseTriangle(he45);
-	writeMesh("collapse_after.obj", mesh);
-	delete(mesh);
-}
-
-void exampleMeshIter(PolyMesh* mesh)
-{
-	std::cout << (mesh->isEmpty() ? "[not valid]" : "[valid]") << std::endl;
-	std::cout << " V:" << mesh->numVertices() << std::endl;
-	//iter all mesh vertices
-	for (VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
+	bool operator()(const Edge_priority &a, const Edge_priority &b) 
 	{
-		MVert* v = *v_it;	//get the vertex pointer, you can check class MVert to know more
-		MPoint3 p = (v)->position();	//get the vertex position
-		mesh->isIsolated(v);	//check if the vertex is isolated
-		mesh->isBoundary(v);	//check if the vertex is boundary
-
-		for (VertexVertexIter vv_it = mesh->vv_iter(v); vv_it.isValid(); ++vv_it)
-		{
-			MVert* vv = *vv_it;
-		}
-		for (VertexOHalfEdgeIter voh_it = mesh->voh_iter(v); voh_it.isValid(); ++voh_it)
-		{
-			MHalfedge* voh = *voh_it;
-		}
-		for (VertexEdgeIter ve_it = mesh->ve_iter(v); ve_it.isValid(); ++ve_it)
-		{
-			MEdge* ve = *ve_it;
-		}
-		for (VertexFaceIter vf_it = mesh->vf_iter(v); vf_it.isValid(); ++vf_it)
-		{
-			MPolyFace* vf = *vf_it;
-		}
+		return a.cost > b.cost;
 	}
+};
 
-	std::cout << "HE:" << mesh->numHalfEdges() << std::endl;
-	//iter all mesh halfedge
-	for (HalfEdgeIter he_it = mesh->halfedge_begin(); he_it != mesh->halfedge_end(); ++he_it)
+std::priority_queue<Edge_priority, std::vector<Edge_priority>, cmp> Cost;
+std::map<MVert*, Eigen::Matrix4d> Qv;
+std::map<MEdge*, int> State;
+
+
+void cal_Q(MVert* vh, PolyMesh* mesh)
+{
+	MVector3 p_vh = vh->position();
+	Eigen::Matrix4d Q_temp;
+	Q_temp.setZero();
+	MVector3 face_nor;
+	double a, b, c, d;
+	Eigen::Matrix<double, 4, 1> p;
+	if (!mesh->isBoundary(vh))
 	{
-		MHalfedge* he = *he_it;	//get the halfedge pointer, you can check class MHalfedge to know more
-		MEdge* edge = he->edge();
+		for (auto vf_it = mesh->vf_iter(vh); vf_it.isValid(); ++vf_it)
+		{
+			face_nor = (*vf_it)->normal();
+			a = face_nor[0], b = face_nor[1], c = face_nor[2], d = -dot(face_nor, p_vh);
+			p = { a,b,c,d };
+			Q_temp += p * p.transpose();
+		}
+		Qv[vh] = Q_temp;
 	}
-
-	std::cout << " E:" << mesh->numEdges() << std::endl;
-	//iter all mesh edge
-	for (EdgeIter e_it = mesh->edges_begin(); e_it != mesh->edges_end(); ++e_it)
+	else
 	{
-		MEdge* e = *e_it;	//get the edge pointer, you can check class MHalfedge to know more
-		MHalfedge* he = e->halfEdge();
-	}
-
-	std::cout << " P:" << mesh->numPolygons() << std::endl;
-	for (FaceIter f_it = mesh->polyfaces_begin(); f_it != mesh->polyfaces_end(); ++f_it)
-	{
-		MPolyFace* f = *f_it;	//get the face pointer, you can check class MHalfedge to know more
-
-		for (FaceVertexIter fv_it = mesh->fv_iter(*f_it); fv_it.isValid(); ++fv_it)
+		for (auto vf_it = mesh->vf_iter(vh); vf_it.isValid(); ++vf_it)
 		{
-			MVert* fv = *fv_it;
+			face_nor = (*vf_it)->normal();
+			a = face_nor[0], b = face_nor[1], c = face_nor[2], d = -dot(face_nor, p_vh);
+			p = { a,b,c,d };
+			Q_temp += p * p.transpose();
+			for (auto fhh_it = mesh->fhe_iter(*vf_it); fhh_it.isValid(); ++fhh_it)
+			{
+				if ((*fhh_it)->isBoundary())
+				{
+					MVector3 vir_face_nor = (cross((*fhh_it)->pair()->tangent(), face_nor)).normalized();
+					a = vir_face_nor[0], b = vir_face_nor[1], c = vir_face_nor[2], d = -dot(vir_face_nor, p_vh);
+					p = { a,b,c,d };
+					Q_temp += p * p.transpose();
+					break;
+				}
+			}
 		}
-		for (FaceHalfEdgeIter fhe_it = mesh->fhe_iter(*f_it); fhe_it.isValid(); ++fhe_it)
+		/*for (auto vhh_it = mesh->voh_iter(vh); vhh_it.isValid(); ++vhh_it)
 		{
-			MHalfedge* fv = *fhe_it;
-		}
-		for (FaceFaceIter ff_it = mesh->ff_iter(*f_it); ff_it.isValid(); ++ff_it)
-		{
-			MPolyFace* fv = *ff_it;
-		}
+			if (!(*vhh_it)->isBoundary())
+			{
+				MPolyFace* vf = (*vhh_it)->polygon();
+				MVector3 face_nor = vf->normal();
+				double a = face_nor[0], b = face_nor[1], c = face_nor[2], d = -dot(face_nor, p_vh);
+				Eigen::Matrix<double, 4, 1> p = { a,b,c,d };
+				Q_temp += p * p.transpose();
+			}
+			else
+			{
+				MHalfedge* hh_boundary = *vhh_it;
+				MHalfedge* prev_hh_boundary = hh_boundary->prev();
+				MPolyFace* face_hh = hh_boundary->pair()->polygon(), *face_prev_hh = prev_hh_boundary->pair()->polygon();
+				MVector3 face_hh_nor = face_hh->normal(), face_prev_hh_nor = face_prev_hh->normal();
+				MVector3 vir_face_hh_nor = cross(hh_boundary->tangent(), face_hh_nor).normalized(), vir_face_prev_hh_nor = cross(prev_hh_boundary->tangent(), face_prev_hh_nor).normalized();
+				double a = vir_face_hh_nor[0], b = vir_face_hh_nor[1], c = vir_face_hh_nor[2], d = -dot(vir_face_hh_nor, p_vh);
+				Eigen::Matrix<double, 4, 1> p = { a,b,c,d };
+				Q_temp += lambda * (p * p.transpose());
+				a = vir_face_prev_hh_nor[0], b = vir_face_prev_hh_nor[1], c = vir_face_prev_hh_nor[2], d = -dot(vir_face_prev_hh_nor, p_vh);
+				p = { a,b,c,d };
+				Q_temp += lambda * (p * p.transpose());
+			}
+		}*/
 	}
 }
 
-void exampleMeshTraverse(PolyMesh* mesh)
+void cal_Cost(MEdge* eh)
 {
-	//you can also use index to get the element
-	//note that if you change the topology, the index of the element and the list of the element will also be change
-	MVert* v = mesh->vert(0);
-	MEdge* e = mesh->edge(0);
-	MPolyFace* f = mesh->polyface(0);
-	MHalfedge* he = mesh->halfedge(0);
-
-	//you can use the function to return list of element, such as
-	mesh->polygonVertices(f);
-
-	//you can also use the adjacent function such as
-	mesh->vertAdjacentEdge(v);
-	mesh->vertAdjacentPolygon(v);
-	mesh->polygonAdjacentPolygon(f);
+	Edge_priority temp;
+	MHalfedge* hh = eh->halfEdge();
+	MVert* v_from = hh->fromVertex(), *v_to = hh->toVertex();
+	Eigen::Matrix4d Q_plus = Qv[v_from] + Qv[v_to], Q_solve = Q_plus;
+	Q_solve(3, 0) = 0.0, Q_solve(3, 1) = 0.0, Q_solve(3, 2) = 0.0, Q_solve(3, 3) = 1.0;
+	MPoint3 new_point;
+	Eigen::Vector4d new_vec;
+	if (Q_solve.determinant() == 0)
+	{
+		MVector3 temp = 0.5*(v_from->position() + v_to->position());
+		new_point = { temp[0], temp[1], temp[2] };
+		new_vec = { new_point[0], new_point[1], new_point[2], 1.0 };
+	}
+	else
+	{
+		Eigen::Vector4d temp = { 0.0,0.0,0.0,1.0 };
+		new_vec = Q_solve.inverse()*temp;
+		new_point = { new_vec[0], new_vec[1], new_vec[2] };
+	}
+	temp.cost = new_vec.transpose()*Q_plus*new_vec;
+	temp.eh = eh;
+	temp.state = State[eh];
+	temp.NewPoint = new_point;
+	Cost.push(temp);
 }
 
+void update_Q_and_Cost(MVert* vh, PolyMesh* mesh)
+{
+	cal_Q(vh, mesh);
+	for (auto vv_it = mesh->vv_iter(vh); vv_it.isValid(); ++vv_it)
+	{
+		cal_Q(*vv_it, mesh);
+	}
+	for (auto ve_it = mesh->ve_iter(vh); ve_it.isValid(); ++ve_it)
+	{
+		State[*ve_it]++;
+		cal_Cost(*ve_it);
+	}
+}
+
+bool QEM_collapse(const Edge_priority &temp_edge, PolyMesh* mesh)
+{
+	bool is_collapse = false;
+	MEdge* eh = temp_edge.eh;
+	MHalfedge* hh = eh->halfEdge(), *hh_oppo = hh->pair();
+	MVert *v_from = hh->fromVertex(), *v_to = hh->toVertex();
+	MVert* vh;
+
+	if (mesh->is_collapse_ok(hh))
+	{
+		v_to->setPosition(temp_edge.NewPoint);
+		mesh->collapse(hh);
+		is_collapse = true;
+		vh = v_to;
+	}
+	else if (mesh->is_collapse_ok(hh_oppo))
+	{
+		v_from->setPosition(temp_edge.NewPoint);
+		mesh->collapse(hh_oppo);
+		is_collapse = true;
+		vh = v_from;
+	}
+	if (is_collapse)
+	{
+		update_Q_and_Cost(vh, mesh);
+	}
+	return is_collapse;
+}
+
+void QEM(PolyMesh* mesh)
+{
+	if (mesh->numVertices() == 3)
+		return;
+	/// Initial Qv
+	for (MVert* vh : mesh->vertices())
+	{
+		MVector3 p_vh = vh->position();
+		Eigen::Matrix4d Q_temp;
+		Q_temp.setZero();
+		for (auto vf_it = mesh->vf_iter(vh); vf_it.isValid(); ++vf_it)
+		{
+			MVector3 face_nor = (*vf_it)->normal();
+			double a = face_nor[0], b = face_nor[1], c = face_nor[2], d = -dot(face_nor, p_vh);
+			Eigen::Matrix<double, 4, 1> p = { a,b,c,d };
+			Q_temp += p * p.transpose();
+		}
+		Qv.insert(std::make_pair(vh, Q_temp));
+	}
+
+	///Initial Cost
+	for (MEdge* eh : mesh->edges())
+	{
+		State.insert(std::make_pair(eh, 0));
+		cal_Cost(eh);
+	}
+		
+	/// simplification
+	int N_V = mesh->numVertices();
+	int target_num = std::min((int)(0.5*N_V), 1000);
+	while(N_V > target_num)
+	{
+		std::cout << N_V << std::endl;
+		Edge_priority temp_edge = Cost.top();
+		Cost.pop();
+		MEdge* eh = temp_edge.eh;
+		if (temp_edge.state == State[eh])
+		{
+			if (eh->index() != -1)
+			{
+				if (QEM_collapse(temp_edge, mesh))
+				{
+					N_V--;
+				}
+			}
+		}
+	}
+}
 
 int main()
 {
-	//create a basic mesh
-	testBasicTriangle();
-
-	//mesh load an write , now only support obj/off
+	// read input mesh
 	PolyMesh* mesh = new PolyMesh();
-	loadMesh("triangle.obj", mesh);
-	writeMesh("triangle.obj", mesh);
-	//you can also use the IO option such as
-	IOOptions opt;
-	opt.vert_have_normal = true;	//it will load vertex normal
-	loadMesh("triangle.obj", mesh, opt);
-	writeMesh("triangle.obj", mesh, opt);
+	loadMesh("cat_open.obj", mesh);
 
-	//using iter to operating mesh;
-	exampleMeshIter(mesh);
-	//using index to operating mesh;
-	exampleMeshTraverse(mesh);
-	
-	//example for split e triangle mesh edge
-	exampleSplitTriangle();
-	
-	//example for flip e triangle mesh edge
-	exampleFlipTriangle();
-	
-	//example for collapse e triangle mesh edge
-	exampleCollapseTriangle();
+	/*MHalfedge* bound_hh;
+	for (MHalfedge* hh : mesh->halfEdges())
+	{
+		if (hh->isBoundary())
+			bound_hh = hh;
+	}
+	MHalfedge* temp_hh = bound_hh->prev();
+	int ii = 2;
+	while (temp_hh != bound_hh)
+	{
+		std::cout << ii << std::endl;
+		temp_hh = temp_hh->prev();
+		ii++;
+	}*/
+
+	clock_t start, end;
+	std::cout << "Begin QEM" << std::endl;
+	start = clock();
+	QEM(mesh);
+	end = clock();
+	std::cout << "time: " << (double)(end - start) / CLOCKS_PER_SEC << "s" << std::endl;
+	writeMesh("cat_open_QEM.obj", mesh);
 }

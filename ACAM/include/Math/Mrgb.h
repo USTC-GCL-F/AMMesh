@@ -11,16 +11,16 @@ const float ColorThreshold = 0.001f;
 * The RGBf is 0-1; 小于0的数会被设置为0；
 */
 
-struct RGB
+struct MRGB
 {
 	unsigned int r, g, b;
-	RGB(unsigned int red, unsigned int green, unsigned int blue)
+	MRGB(unsigned int red, unsigned int green, unsigned int blue)
 	{
 		r = red % 255;
 		g = green % 255;
 		b = blue % 255;
 	}
-	RGB() : r(0), g(0), b(0) {}
+	MRGB() : r(0), g(0), b(0) {}
 
 	unsigned int setR(unsigned int red) { return r = red % 255; }
 	unsigned int setG(unsigned int green) { return g = green % 255; }
@@ -31,10 +31,10 @@ struct RGB
 	unsigned int B() { return b; }
 };
 
-struct RGBf
+struct MRGBf
 {
 	float r, g, b;
-	RGBf(float red, float green, float blue)
+	MRGBf(float red, float green, float blue)
 	{
 		red = red >= 0 ? red : 0;
 		r = red - (int)red;
@@ -43,7 +43,7 @@ struct RGBf
 		blue = blue >= 0 ? blue : 0;
 		b = blue - (int)blue;
 	}
-	RGBf() : r(0), g(0), b(0) {}
+	MRGBf() : r(0), g(0), b(0) {}
 
 	float setR(float red) {
 		red = red >= 0 ? red : 0;
@@ -63,11 +63,11 @@ struct RGBf
 	float B() { return b; }
 };
 
-struct RGBA
+struct MRGBA
 {
 	unsigned int r, g, b, a;
 
-	RGBA(unsigned int red, unsigned int green, unsigned int blue, unsigned int alpha)
+	MRGBA(unsigned int red, unsigned int green, unsigned int blue, unsigned int alpha)
 	{
 		r = red % 255;
 		g = green % 255;
@@ -77,7 +77,7 @@ struct RGBA
 		a = alpha;
 	}
 
-	RGBA(unsigned int red, unsigned int green, unsigned int blue) : a(0)
+	MRGBA(unsigned int red, unsigned int green, unsigned int blue) : a(0)
 	{
 		r = red % 255;
 		g = green % 255;
@@ -98,10 +98,10 @@ struct RGBA
 	float A() { return a / 100.0f; }
 };
 
-struct RGBAf
+struct MRGBAf
 {
 	float r, g, b, a;
-	RGBAf(float red, float green, float blue, float alpha)
+	MRGBAf(float red, float green, float blue, float alpha)
 	{
 		red = red >= 0 ? red : 0;
 		r = red - (int)red;
@@ -115,7 +115,7 @@ struct RGBAf
 		a = alpha;
 	}
 
-	RGBAf() : r(0), g(0), b(0), a(0) {}
+	MRGBAf() : r(0), g(0), b(0), a(0) {}
 
 	float setR(float red) {
 		red = red >= 0 ? red : 0;
@@ -177,24 +177,24 @@ struct Texcoord
 	}
 };
 
-inline RGBf RGB_to_RGBF(RGB& color)
+inline MRGBf RGB_to_RGBF(MRGB& color)
 {
-	return(RGBf(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f));
+	return(MRGBf(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f));
 }
 
-inline RGB RGBF_to_RGB(RGBf& color)
+inline MRGB RGBF_to_RGB(MRGBf& color)
 {
-	return(RGB(unsigned int(color.r * 255), unsigned int(color.g * 255), unsigned int(color.b * 255)));
+	return(MRGB(unsigned int(color.r * 255), unsigned int(color.g * 255), unsigned int(color.b * 255)));
 }
 
-inline RGBAf RGBA_to_RGBAF(RGBA& color)
+inline MRGBAf RGBA_to_RGBAF(MRGBA& color)
 {
-	return(RGBAf(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 100.0f));
+	return(MRGBAf(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 100.0f));
 }
 
-inline RGBA RGBAF_to_RGBA(RGBAf& color)
+inline MRGBA RGBAF_to_RGBA(MRGBAf& color)
 {
-	return(RGBA(unsigned int(color.r * 255), unsigned int(color.g * 255), unsigned int(color.b * 255), unsigned int(color.a * 100)));
+	return(MRGBA(unsigned int(color.r * 255), unsigned int(color.g * 255), unsigned int(color.b * 255), unsigned int(color.a * 100)));
 }
 
 /**
@@ -216,7 +216,7 @@ inline bool equality(Texcoord& lhs, Texcoord& rhs)
 	}
 }
 
-inline bool equality(RGB& lhs, RGB& rhs)
+inline bool equality(MRGB& lhs, MRGB& rhs)
 {
 	if ((lhs.r - rhs.r) == 0 && (lhs.g - rhs.g) == 0 && (lhs.b - rhs.b) == 0)
 	{
@@ -228,7 +228,7 @@ inline bool equality(RGB& lhs, RGB& rhs)
 	}
 }
 
-inline bool equality(RGBf& lhs, RGBf& rhs)
+inline bool equality(MRGBf& lhs, MRGBf& rhs)
 {
 	bool r = (lhs.r - rhs.r < ColorThreshold) && (rhs.r - lhs.r < ColorThreshold);
 	bool g = (lhs.g - rhs.g < ColorThreshold) && (rhs.g - lhs.g < ColorThreshold);
@@ -244,7 +244,7 @@ inline bool equality(RGBf& lhs, RGBf& rhs)
 	}
 }
 
-inline bool equality(RGBAf& lhs, RGBAf& rhs)
+inline bool equality(MRGBAf& lhs, MRGBAf& rhs)
 {
 	bool r = (lhs.r - rhs.r < ColorThreshold) && (rhs.r - lhs.r < ColorThreshold);
 	bool g = (lhs.g - rhs.g < ColorThreshold) && (rhs.g - lhs.g < ColorThreshold);

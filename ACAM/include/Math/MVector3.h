@@ -124,6 +124,18 @@ namespace acamcad {
                 return 2;
             }
         }
+
+
+        MVector3 cross(const MVector3& b) const
+        {
+            return MVector3(y() * b.z() - b.y() * z(), -(x() * b.z() - b.x() * z()), x() * b.y() - b.x() * y());
+        }
+
+        double dot(const MVector3& b) const
+        {
+            return x() * b.x() + y() * b.y() + z() * b.z();
+        }
+
     };
 
     inline double dot(const MVector3& a, const MVector3& b)
@@ -206,6 +218,18 @@ namespace acamcad {
         return MVector3(-a[0], -a[1], -a[2]);
     }
 
+    inline double operator|(const MVector3& a, const MVector3& b)
+    {
+        return a.x() * b.x() + a.y() * b.y() + a.z() * b.z();
+    }
+
+    inline MVector3 operator%(const MVector3& a, const MVector3& b)
+    {
+        return MVector3(a.y() * b.z() - b.y() * a.z(),
+            -(a.x() * b.z() - b.x() * a.z()),
+            a.x() * b.y() - b.x() * a.y());
+    }
+
     inline void buildOrthoBasis_naive(MVector3& dir, MVector3& dir1, MVector3& dir2)
     {
         dir.normalize();
@@ -263,7 +287,6 @@ namespace acamcad {
 
         if (binormal.norm() == 0.0 || tangent.norm() == 0.0) buildOrthoBasis_naive(normal, tangent, binormal);
     }
-
 }
 
     //void print(const std::string& name = "") const

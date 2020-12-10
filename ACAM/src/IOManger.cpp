@@ -8,26 +8,36 @@ namespace polymesh {
 
 #define LINE_LEN 4096
 
-bool loadMesh(const std::string& _filename, PolyMesh* mesh)
+bool loadMesh(const std::string& _filename, PolyMesh* &mesh)
 {
     IOOptions opt;
     return loadMesh(_filename, mesh, opt);
 }
 
-bool loadMesh(const std::string& _filename, PolyMesh* mesh, IOOptions& opt)
+bool loadMesh(const std::string& _filename, PolyMesh* &mesh, IOOptions& opt)
 {
     OBJReader* reader_obj = new OBJReader();
     OFFReader* reader_off = new OFFReader();
 
     if (reader_obj->can_u_read(_filename))
     {
-        mesh->clear();
+        if (mesh == nullptr) {
+            mesh = new PolyMesh();
+        }
+        else {
+            mesh->clear();
+        }   
         bool ok = reader_obj->read(_filename, mesh, opt);
         return ok;
     }
     if (reader_off->can_u_read(_filename))
     {
-        mesh->clear();
+        if (mesh == nullptr) {
+            mesh = new PolyMesh();
+        }
+        else {
+            mesh->clear();
+        }
         bool ok = reader_off->read(_filename, mesh, opt);
         return ok;
     }
@@ -169,7 +179,7 @@ bool OBJReader::loadMeshFromOBJ(std::istream& _in, PolyMesh* mesh, IOOptions& op
 
     std::vector<MVert*> vert_list;
     std::vector<MVector3> normal_list;
-    std::vector<RGBf> colors;
+    std::vector<MRGBf> colors;
     std::vector<Texcoord> texcoords;
 
     std::string line;
@@ -216,7 +226,7 @@ bool OBJReader::loadMeshFromOBJ(std::istream& _in, PolyMesh* mesh, IOOptions& op
                     if (user_options.vert_have_color)
                     {
                         file_options.vert_have_color = true;
-                        colors.push_back(RGBf(r, g, b));
+                        colors.push_back(MRGBf(r, g, b));
                     }
                 }
             }
@@ -251,7 +261,7 @@ bool OBJReader::loadMeshFromOBJ(std::istream& _in, PolyMesh* mesh, IOOptions& op
                 if (user_options.vert_have_color)
                 {
                     file_options.vert_have_color = true;
-                    colors.push_back(RGBf(r, g, b));
+                    colors.push_back(MRGBf(r, g, b));
                 }
             }
         }
@@ -525,7 +535,7 @@ bool OBJReader::loadMeshFromOBJ(std::istream& _in, PolyMesh* mesh, IOOptions& op
                 Material& mat = materials_[matname];
 
                 if (mat.has_Kd()) {
-                    RGBf fc = mat.Kd();
+                    MRGBf fc = mat.Kd();
 
                     if (user_options.face_has_color) 
                     {
@@ -831,7 +841,7 @@ bool OFFReader::loadMeshFromOFF(std::istream& _in, PolyMesh* mesh, IOOptions& op
             case 3: stream >> c0;  stream >> c1;  stream >> c2;
                 if (user_options.vert_have_color)
                 {
-                    RGB c(c0, c1, c2); RGBf cf = RGB_to_RGBF(c);
+                    MRGB c(c0, c1, c2); MRGBf cf = RGB_to_RGBF(c);
                     pvert->setColor(cf);
                 }
                 break;
@@ -839,7 +849,7 @@ bool OFFReader::loadMeshFromOFF(std::istream& _in, PolyMesh* mesh, IOOptions& op
             case 4: stream >> c0;  stream >> c1;  stream >> c2; stream >> c3;
                 if (user_options.vert_have_color)
                 {
-                    RGBA c(c0, c1, c2, c3); RGBAf cf = RGBA_to_RGBAF(c);
+                    MRGBA c(c0, c1, c2, c3); MRGBAf cf = RGBA_to_RGBAF(c);
                     pvert->setColor(cf);
                 }
                 break;
@@ -918,7 +928,7 @@ bool OFFReader::loadMeshFromOFF(std::istream& _in, PolyMesh* mesh, IOOptions& op
             case 3: stream >> c0;  stream >> c1;  stream >> c2;
                 if (user_options.face_has_color) 
                 {
-                    RGB c(c0, c1, c2); RGBf cf = RGB_to_RGBF(c);
+                    MRGB c(c0, c1, c2); MRGBf cf = RGB_to_RGBF(c);
                     pface->setColor(cf);
                 }
                 break;
@@ -926,7 +936,7 @@ bool OFFReader::loadMeshFromOFF(std::istream& _in, PolyMesh* mesh, IOOptions& op
             case 4: stream >> c0;  stream >> c1;  stream >> c2; stream >> c3;
                 if (user_options.face_has_color) 
                 {
-                    RGBA c(c0, c1, c2, c3); RGBAf cf = RGBA_to_RGBAF(c);
+                    MRGBA c(c0, c1, c2, c3); MRGBAf cf = RGBA_to_RGBAF(c);
                     pface->setColor(cf);
                 }
                 break;
@@ -1125,7 +1135,7 @@ bool OBJWriter::write(std::ostream& _out, PolyMesh* mesh, IOOptions _opt, std::s
     Texcoord t;
     MVert* vh;
     std::vector<MVert*> vhandles;
-    RGBAf caf; RGBf cf;
+    MRGBAf caf; MRGBf cf;
     bool useMatrial = false;
 
     {
@@ -1305,7 +1315,7 @@ bool OBJWriter::write(std::ostream& _out, PolyMesh* mesh, IOOptions _opt, std::s
     return true;
 }
 
-size_t OBJWriter::getMaterial(RGBf& color) const
+size_t OBJWriter::getMaterial(MRGBf& color) const
 {
     for (size_t i = 0; i < material_.size(); i++)
         if (equality(color, material_[i]))
@@ -1316,7 +1326,7 @@ size_t OBJWriter::getMaterial(RGBf& color) const
     return material_.size() - 1;
 }
 
-size_t OBJWriter::getMaterial(RGBAf& color) const
+size_t OBJWriter::getMaterial(MRGBAf& color) const
 {
     for (size_t i = 0; i < materialA_.size(); i++)
         if (equality(color, materialA_[i]))
@@ -1329,8 +1339,8 @@ size_t OBJWriter::getMaterial(RGBAf& color) const
 
 bool OBJWriter::writeMaterial(std::ostream& _out, PolyMesh* mesh, IOOptions _opt) const
 {
-    RGBf cf;
-    RGBAf caf;
+    MRGBf cf;
+    MRGBAf caf;
 
     material_.clear();
     materialA_.clear();
@@ -1429,8 +1439,8 @@ bool OFFWriter::write_ascii(std::ostream& _out, PolyMesh* mesh, IOOptions _opt) 
     size_t nV, nF;
     MPoint3 v; MVector3 n;
 
-    RGBf cf;
-    RGBAf caf;
+    MRGBf cf;
+    MRGBAf caf;
 
     Texcoord t;
 

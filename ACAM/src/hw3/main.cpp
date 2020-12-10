@@ -35,7 +35,7 @@ void main(int argc, char** argv)
 	std::vector<double> FaceArea(mesh->numPolygons());//每个面的面积
 	std::vector<MPoint3> FaceCenter(mesh->numPolygons());//
 
-	for (MPolyFace* fh : mesh->polygons())
+	for (MPolyFace* fh : mesh->polyfaces())
 	{
 		int f_id = (*fh).index();
 		NewNormal[f_id] = (*fh).normal();
@@ -52,7 +52,7 @@ void main(int argc, char** argv)
 	}
 
 	SigmaCenter = 0;
-	for (MPolyFace* fh : mesh->polygons())
+	for (MPolyFace* fh : mesh->polyfaces())
 	{
 		int f_id = (*fh).index();
 		for (FaceFaceIter nei_fh = mesh->ff_iter(fh); nei_fh.isValid(); ++nei_fh)
@@ -65,7 +65,7 @@ void main(int argc, char** argv)
 
 	for (int i = 0; i < NormalIterNum; i++)
 	{
-		for (MPolyFace* fh : mesh->polygons())
+		for (MPolyFace* fh : mesh->polyfaces())
 		{
 			double Kp = 0;
 			MVector3 NewN(0, 0, 0);

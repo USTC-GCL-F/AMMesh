@@ -31,7 +31,7 @@ namespace polymesh {
 		return boundaries[0];
 	}
 
-	bool PolyMesh::isBoundary(MVert* vert)
+	bool PolyMesh::isBoundary(MVert* vert) const
 	{
 		if (vert->halfEdge() == nullptr)
 		{
@@ -52,22 +52,22 @@ namespace polymesh {
 		return false;
 	}
 
-	bool PolyMesh::isBoundary(MEdge* edge)
+	bool PolyMesh::isBoundary(const MEdge* edge) const
 	{
 		return (edge->halfEdge()->isBoundary() || edge->halfEdge()->pair()->isBoundary());
 	}
 
-	bool PolyMesh::isBoundary(MHalfedge* halfedge)
+	bool PolyMesh::isBoundary(const MHalfedge* halfedge) const
 	{
 		return halfedge->isBoundary(); 
 	}
 
-	bool PolyMesh::isIsolated(MVert* vert)
+	bool PolyMesh::isIsolated(MVert* vert) const
 	{
 		return vert->isIsolated();
 	}
 
-	bool PolyMesh::isIsolated(MEdge* edge)
+	bool PolyMesh::isIsolated(MEdge* edge) const
 	{
 		MHalfedge* he0 = edge->halfEdge();
 		MHalfedge* he1 = edge->halfEdge()->pair();
@@ -75,7 +75,7 @@ namespace polymesh {
 		return (he0->isBoundary() && he1->isBoundary());
 	}
 
-	bool PolyMesh::isIsolated(MPolyFace* face)
+	bool PolyMesh::isIsolated(MPolyFace* face) const
 	{
 		MHalfedge* he_begin = face->halfEdge();
 		MHalfedge* he = he_begin;
@@ -100,7 +100,7 @@ namespace polymesh {
 			return vertAdjacentVertices(vert).size();
 	}
 
-	std::vector<MHalfedge*> PolyMesh::vertAdjacentHalfEdge(MVert* vert)
+	std::vector<MHalfedge*> PolyMesh::vertAdjacentHalfEdge(MVert* vert) const
 	{
 		std::vector<MHalfedge*> v_adj; v_adj.clear();
 
@@ -114,19 +114,6 @@ namespace polymesh {
 		return v_adj;
 	}
 
-	std::vector<MVert*> PolyMesh::vertAdjacentVertices(MVert* vert)
-	{
-		std::vector<MVert*> v_adj; v_adj.clear();
-
-		MHalfedge* he_begin = vert->halfEdge();
-		MHalfedge* he = vert->halfEdge();
-
-		do {
-			v_adj.push_back(he->toVertex());
-			he = he->rotateNext();
-		} while (he != he_begin);
-		return v_adj;	
-	}
 	std::vector<MVert*> PolyMesh::vertAdjacentVertices(MVert* vert) const
 	{
 		std::vector<MVert*> v_adj; v_adj.clear();
@@ -141,7 +128,7 @@ namespace polymesh {
 		return v_adj;
 	}
 
-	std::vector<MEdge*> PolyMesh::vertAdjacentEdge(MVert* vert)
+	std::vector<MEdge*> PolyMesh::vertAdjacentEdge(MVert* vert) const
 	{
 		std::vector<MEdge*> v_adj; v_adj.clear();
 
@@ -155,7 +142,7 @@ namespace polymesh {
 		return v_adj;
 	}
 
-	std::vector<MPolyFace*> PolyMesh::vertAdjacentPolygon(MVert* vert)
+	std::vector<MPolyFace*> PolyMesh::vertAdjacentPolygon(MVert* vert) const
 	{
 		std::vector<MPolyFace*> v_adj; v_adj.clear();
 		MHalfedge* he_begin = vert->halfEdge();
@@ -171,7 +158,7 @@ namespace polymesh {
 		return v_adj;
 	}
 
-	std::vector<MPolyFace*> PolyMesh::edgeAdjacentPolygon(MEdge* edge)
+	std::vector<MPolyFace*> PolyMesh::edgeAdjacentPolygon(MEdge* edge) const
 	{
 		std::vector<MPolyFace*> e_poly; e_poly.clear();
 
@@ -184,7 +171,7 @@ namespace polymesh {
 		return e_poly;
 	}
 
-	std::vector<MPolyFace*> PolyMesh::polygonAdjacentPolygon(MPolyFace* face)
+	std::vector<MPolyFace*> PolyMesh::polygonAdjacentPolygon(MPolyFace* face) const
 	{
 		std::vector<MPolyFace*> f_face; f_face.clear();
 
@@ -200,7 +187,7 @@ namespace polymesh {
 		return f_face;
 	}
 
-	std::vector<MVert*> PolyMesh::polygonVertices(MPolyFace* face)
+	std::vector<MVert*> PolyMesh::polygonVertices(MPolyFace* face) const
 	{
 		std::vector<MVert*> f_vert; f_vert.clear();
 
@@ -214,7 +201,7 @@ namespace polymesh {
 		return f_vert;
 	}
 
-	std::vector<MHalfedge*> PolyMesh::polygonHalfedges(MPolyFace* face)
+	std::vector<MHalfedge*> PolyMesh::polygonHalfedges(MPolyFace* face) const
 	{
 		std::vector<MHalfedge*> f_edge; f_edge.clear();
 
@@ -228,7 +215,7 @@ namespace polymesh {
 		return f_edge;
 	}
 
-	std::vector<MEdge*> PolyMesh::polygonEdges(MPolyFace* face)
+	std::vector<MEdge*> PolyMesh::polygonEdges(MPolyFace* face) const
 	{
 		std::vector<MEdge*> f_edge; f_edge.clear();
 
@@ -374,19 +361,19 @@ namespace polymesh {
 
 	void PolyMesh::clear()
 	{
-		for (auto v : vertices_)
+		for (MVert* v : vertices_)
 			poolV.Recycle(v);
 		vertices_.clear();
 
-		for (auto he : half_edges_)
+		for (MHalfedge* he : half_edges_)
 			poolHE.Recycle(he);
 		half_edges_.clear();
 
-		for (auto e : edges_)
+		for (MEdge* e : edges_)
 			poolE.Recycle(e);
 		edges_.clear();
 
-		for (auto p : polygons_)
+		for (MPolyFace* p : polygons_)
 			poolP.Recycle(p);
 		polygons_.clear();
 	}
@@ -2090,7 +2077,7 @@ namespace polymesh {
 		}
 
 		he0_prev->setNext(he0_next);	he0_next->setPrev(he0_prev);
-		he1_prev->setNext(he1_next);	he1_next->setPrev(he0_prev);
+		he1_prev->setNext(he1_next);	he1_next->setPrev(he1_prev);
 
 		if (f0 != nullptr)
 		{

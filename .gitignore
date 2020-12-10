@@ -2,3 +2,5 @@
 */lib/*
 /model/*
 */example/*
+*/Release/*
+*.zip

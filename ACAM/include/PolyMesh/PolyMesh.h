@@ -14,6 +14,10 @@ typedef std::vector<MVert*>::iterator VertexIter;
 typedef std::vector<MEdge*>::iterator EdgeIter;
 typedef std::vector<MHalfedge*>::iterator HalfEdgeIter;
 typedef std::vector<MPolyFace*>::iterator FaceIter;
+typedef std::vector<MVert*>::const_iterator CVertexIter;
+typedef std::vector<MEdge*>::const_iterator CEdgeIter;
+typedef std::vector<MHalfedge*>::const_iterator CHalfEdgeIter;
+typedef std::vector<MPolyFace*>::const_iterator CFaceIter;
 
 const double MehsThreshold = 0.0001;
 
@@ -48,12 +52,12 @@ public:
 
 	const std::vector<MVert*>& vertices() const { return vertices_; }
 	const std::vector<MEdge*>& edges() const { return edges_; }
-	const std::vector<MPolyFace*>& polygons() const { return polygons_; }
+	const std::vector<MPolyFace*>& polyfaces() const { return polygons_; }
 	const std::vector<MHalfedge*>& halfEdges() const { return half_edges_; }
 
 	std::vector<MVert*> vertices() { return vertices_; }
 	std::vector<MEdge*> edges() { return edges_; }
-	std::vector<MPolyFace*> polygons() { return polygons_; }
+	std::vector<MPolyFace*> polyfaces() { return polygons_; }
 	std::vector<MHalfedge*> halfEdges() { return half_edges_; }
 
 	/// ID should be used cautiously in topology changes
@@ -79,21 +83,20 @@ public:
 	/// return all boundary vertices, every one is in order;
 	//std::vector<std::vector<MVert*>> boundaryVerticesAll();
 
-	bool isBoundary(MVert* vert);
-	bool isBoundary(MEdge* edge);
-	bool isBoundary(MHalfedge* halfedge);
+	bool isBoundary(MVert* vert) const;
+	bool isBoundary(const MEdge* edge) const;
+	bool isBoundary(const MHalfedge* halfedge) const;
 
-	std::vector<MVert*> vertAdjacentVertices(MVert* vert);
-	std::vector<MVert*> vertAdjacentVertices(MVert* vert) const;
-	std::vector<MEdge*> vertAdjacentEdge(MVert* vert);
-	std::vector<MHalfedge*> vertAdjacentHalfEdge(MVert* vert);
-	std::vector<MPolyFace*> vertAdjacentPolygon(MVert* vert);
+	std::vector<MVert*>		vertAdjacentVertices(MVert* vert) const;
+	std::vector<MEdge*>		vertAdjacentEdge(MVert* vert) const;
+	std::vector<MHalfedge*> vertAdjacentHalfEdge(MVert* vert) const;
+	std::vector<MPolyFace*> vertAdjacentPolygon(MVert* vert) const;
 
-	std::vector<MPolyFace*> edgeAdjacentPolygon(MEdge* edge);
-	std::vector<MPolyFace*> polygonAdjacentPolygon(MPolyFace* face);
-	std::vector<MVert*> polygonVertices(MPolyFace* face);
-	std::vector<MHalfedge*> polygonHalfedges(MPolyFace* face);
-	std::vector<MEdge*> polygonEdges(MPolyFace* face);
+	std::vector<MPolyFace*> edgeAdjacentPolygon(MEdge* edge) const;
+	std::vector<MPolyFace*> polygonAdjacentPolygon(MPolyFace* face) const;
+	std::vector<MVert*>		polygonVertices(MPolyFace* face) const;
+	std::vector<MHalfedge*> polygonHalfedges(MPolyFace* face) const;
+	std::vector<MEdge*>		polygonEdges(MPolyFace* face) const;
 
 	MHalfedge* edgeHalfEdge(MEdge* edge, unsigned int di);
 
@@ -106,9 +109,9 @@ public:
 
 	size_t valence(MVert* vert) const;
 
-	bool isIsolated(MVert* vert);
-	bool isIsolated(MEdge* edge);
-	bool isIsolated(MPolyFace* face);
+	bool isIsolated(MVert* vert) const;
+	bool isIsolated(MEdge* edge) const;
+	bool isIsolated(MPolyFace* face) const;
 
 	bool isTriangleMesh();
 
@@ -167,6 +170,34 @@ public:
 	}
 	FaceIter polyfaces_end() {
 		return polygons_.end();
+	}
+
+	CVertexIter const_vertices_begin() const {
+		return vertices_.cbegin();
+	}
+	CVertexIter const_vertices_end() const {
+		return vertices_.cend();
+	}
+
+	CEdgeIter const_edges_begin() const  {
+		return edges_.cbegin();
+	}
+	CEdgeIter const_edges_end() const  {
+		return edges_.cend();
+	}
+
+	CHalfEdgeIter const_halfedge_begin() const  {
+		return half_edges_.cbegin();
+	}
+	CHalfEdgeIter const_halfedge_end() const  {
+		return half_edges_.cend();
+	}
+
+	CFaceIter const_polyfaces_begin() const  {
+		return polygons_.cbegin();
+	}
+	CFaceIter const_polyfaces_end() const  {
+		return polygons_.cend();
 	}
 
 //=====================================================================

@@ -48,7 +48,7 @@ public:
 
 public:
 	MHalfedge* const halfEdge() { return he_; }
-	const MHalfedge* const halfEdge() const { return const_cast<MVert*>(this)->halfEdge(); }
+	const MHalfedge* const halfEdge() const { return he_; }
 
 	void setHalfedge(MHalfedge* he) { he_ = he; }
 
@@ -78,8 +78,8 @@ public:
 	void setSelected(bool select) { flag_show_ ? flag_select_ = select : flag_select_ = false; }
 
 	//The default setting of color is all 0.
-	RGBAf getColor_with_alpha() { return RGBAf(color_[0], color_[1], color_[2], color_[3]); }
-	RGBf getColor() { return RGBf(color_[0], color_[1], color_[2]); }
+	MRGBAf getColor_with_alpha() { return MRGBAf(color_[0], color_[1], color_[2], color_[3]); }
+	MRGBf getColor() { return MRGBf(color_[0], color_[1], color_[2]); }
 	
 	//void setColor(float a[]) { color_[0] = a[0]; color_[1] = a[1]; color_[2] = a[2]; }
 	//void setColor_with_alpha(float a[]) { color_[0] = a[0]; color_[1] = a[1]; color_[2] = a[2], color_[3] = a[3]; }
@@ -87,8 +87,8 @@ public:
 	void setColor(float r, float g, float b) { color_[0] = r; color_[1] = g; color_[2] = b; }
 	void setColor(float r, float g, float b, float a) { color_[0] = r; color_[1] = g; color_[2] = b; color_[3] = a; }
 
-	void setColor(const RGBf& c) { color_[0] = c.r; color_[1] = c.g; color_[2] = c.b; }
-	void setColor(const RGBAf& c) { color_[0] = c.r; color_[1] = c.g; color_[2] = c.b; color_[3] = c.a; }
+	void setColor(const MRGBf& c) { color_[0] = c.r; color_[1] = c.g; color_[2] = c.b; }
+	void setColor(const MRGBAf& c) { color_[0] = c.r; color_[1] = c.g; color_[2] = c.b; color_[3] = c.a; }
 
 	void setTexture(float u, float v) { texcoord_[0] = u, texcoord_[1] = v; }
 	void setTexture(float u, float v, float w) { texcoord_[0] = u, texcoord_[1] = v; texcoord_[2] = w; }
@@ -98,7 +98,7 @@ public:
 	Texcoord getTexture() { return Texcoord(texcoord_[0], texcoord_[1]); }
 	Texcoord getTextureUVW() { return Texcoord(texcoord_[0], texcoord_[1], texcoord_[2]); }
 
-	bool isIsolated() { return he_ == nullptr; }
+	bool isIsolated() const { return he_ == nullptr; }
 
 	//Try to set the half of the point as the boundary half. Be sure call it before adding faces by yourself.
 	void adjustOutgoingHalfedge();
@@ -148,13 +148,13 @@ public:
 	MHalfedge* const rotateNext() { return pair()->next(); }
 	MHalfedge* const rotatePrev() { return prev()->pair(); }
 
-	//const MHalfedge* const next() const { return next_; }
-	//const MHalfedge* const prev() const { return prev_; }
-	//const MHalfedge* const pair() const { return pair_; }
-	//const MVert* const fromVertex() const { return v_; }
-	//const MVert* const toVertex() const { return this->toVertex(); }
-	//const MEdge* const edge() const { return e_; }
-	//const MPolyFace* const polygon() const { return poly_face_; }
+	const MHalfedge* const next() const { return next_; }
+	const MHalfedge* const prev() const { return prev_; }
+	const MHalfedge* const pair() const { return pair_; }
+	const MVert* const fromVertex() const { return v_; }
+	const MVert* const toVertex() const { return next()->fromVertex(); }
+	const MEdge* const edge() const { return e_; }
+	const MPolyFace* const polygon() const { return poly_face_; }
 
 	void setNext(MHalfedge* next) { next_ = next; }
 	void setPrev(MHalfedge* prev) { prev_ = prev; }
@@ -219,10 +219,10 @@ public:
 	int index() const { return index_; }
 	void set_index(int index) { index_ = index; }
 
-	bool isVisibility() { return flag_show_; }
+	bool isVisibility() const { return flag_show_; }
 	void setVisibility(bool visi) { flag_show_ = visi; }
 
-	bool isSelected() { return flag_select_; }
+	bool isSelected() const { return flag_select_; }
 	void setSelected(bool select) { flag_show_ ? flag_select_ = select : flag_select_ = false; }
 
 	///get Vertex of the edge, the 0 is the first, the 1 is the second, the return is not orderd;
@@ -234,7 +234,12 @@ public:
 		else return nullptr;
 	}
 
-	double length()
+	const MVert* getVert(int edge_v) const 
+	{
+		return const_cast<MEdge*>(this)->getVert(edge_v);
+	}
+
+	double length() 
 	{
 		updateVert();
 		MVector3 t = v1_->position() - v2_->position();
@@ -296,6 +301,11 @@ public:
 		return polynum_; 
 	}
 
+	//be sure you have updatePoluNum
+	unsigned int PolyNum() const { 
+		return polynum_;
+	}
+
 	void setNormal(MVector3 new_vec) { normal_ = new_vec; }
 	void setNormal(double nx, double ny, double nz) { normal_ = MVector3(nx, ny, nz); }
 	MVector3 normal() { return normal_; }
@@ -303,10 +313,10 @@ public:
 	int index() const { return index_; }
 	void set_index(int index) { index_ = index; }
 
-	bool isVisibility() { return flag_show_; }
+	bool isVisibility() const { return flag_show_; }
 	void setVisibility(bool visi) { flag_show_ = visi; }
 
-	bool isSelected() { return flag_select_; }
+	bool isSelected() const { return flag_select_; }
 	void setSelected(bool select) { flag_show_ ? flag_select_ = select : flag_select_ = false; }
 
 	int updatePolyNum();
@@ -316,17 +326,17 @@ public:
 	MPoint3 getFaceCenter();
 
 	//The default setting of color is all 0.
-	RGBAf getColor_with_alpha() { return RGBAf(color_[0], color_[1], color_[2], color_[3]); }
-	RGBf getColor() { return RGBf(color_[0], color_[1], color_[2]); }
+	MRGBAf getColor_with_alpha() { return MRGBAf(color_[0], color_[1], color_[2], color_[3]); }
+	MRGBf getColor() { return MRGBf(color_[0], color_[1], color_[2]); }
 
 	void setColor(float r, float g, float b) { color_[0] = r; color_[1] = g; color_[2] = b; }
 	void setColor(float r, float g, float b, float a) { color_[0] = r; color_[1] = g; color_[2] = b; color_[3] = a; }
 
-	void setColor(RGBf& c) { color_[0] = c.r; color_[1] = c.g; color_[2] = c.b; }
-	void setColor(RGBAf& c) { color_[0] = c.r; color_[1] = c.g; color_[2] = c.b; color_[3] = c.a; }
+	void setColor(MRGBf& c) { color_[0] = c.r; color_[1] = c.g; color_[2] = c.b; }
+	void setColor(MRGBAf& c) { color_[0] = c.r; color_[1] = c.g; color_[2] = c.b; color_[3] = c.a; }
 
 	void setMaterialIndex(int id) { material_index_ = id; }
-	int meterialIndex() { return material_index_; }
+	int meterialIndex() const { return material_index_; }
 };
 
 }//polymesh
