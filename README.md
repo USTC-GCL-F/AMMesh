@@ -1,10 +1,24 @@
-# DGP_Course
- 这个项目包含《数字几何处理》这门课程的相关项目
+# A implementation of course "Digital Geometry Precessing" With ACAM Framework
 
-## ACAM
-    刘浩仿照OpenMesh写的图形学框架，以及傅老师课程的作业
+## Video Link
+https://www.bilibili.com/video/BV1B54y1B7Uc
 
-# todo lists
-1.收集完整的项目代码
-2.合理存放录制项目的ppt
-3.在视频中
+## External Libraries
+
+* [Eigen](http://eigen.tuxfamily.org/)
+
+## Usage
+
+```
+git clone https://github.com/USTC-GCL-F/AMMesh
+cd AMMesh_HW
+```
+
+Edit lines **6** of CmakeLists.txt to set the values of **EIGEN_PATH**
+
+```
+mkdir build && cd build
+cmake ..
+```
+
+Open **ACAM_mesh.sln**, select **ALL_BUILD** as launch project, and run.

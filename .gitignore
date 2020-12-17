@@ -1,6 +1,1 @@
-*/build/*
-*/lib/*
-/model/*
-*/example/*
-*/Release/*
-*.zip
+build/*
