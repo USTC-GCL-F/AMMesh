@@ -21,7 +21,7 @@ void main(int argc, char** argv)
 		std::cout << "=================================================\n";
 		return;
 	}
-	//¶ÁÈëÍø¸ñ
+	//????????
 	std::string mesh_path = argv[1];
 	PolyMesh* mesh = new PolyMesh();
 	loadMesh(mesh_path, mesh);
