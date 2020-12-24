@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.5)
 
 project(ACAM_mesh)
 
+#设置不生成MinSizeRel;RelWithDebInfo
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
+
 #path
 SET(EIGEN_PATH "D:/LIBRARY/Eigen")
 
