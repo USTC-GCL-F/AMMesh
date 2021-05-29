@@ -12,7 +12,7 @@ using namespace polymesh;
 void calculateMeshFaceBase(PolyMesh* mesh, std::vector<MVector3>& f_base)
 {
 	f_base.resize(mesh->numPolygons() * 2);
-	for (FaceIter f_it = mesh->polyfaces_begin(), f_end = mesh->polyfaces_end(); f_it != f_end; ++f_it) 
+	for (FaceIter f_it = mesh->polyfaces_begin(), f_end = mesh->polyfaces_end(); f_it != f_end; ++f_it)
 	{
 		assert((*f_it)->PolyNum() >= 3);
 
@@ -44,16 +44,15 @@ void crossfieldCreator(PolyMesh* mesh, std::vector<int>& cons_id, std::vector<MV
 	crossfield.clear();
 	crossfield.resize(fnum);
 	vector<MVector3> f_base(fnum * 2);
-	calculateMeshFaceBase(mesh, f_base);
+	calculateMeshFaceBase(mesh, f_base);//在每个面上算一组基
 
 	for (int i = 0; i < cons_id.size(); i++)
 	{
 		int fid = cons_id[i];
 		status[fid] = 1;
 		MVector3 cf = cons_vec[i].normalized();
-		f_dir[fid] = COMPLEX(dot(cf, f_base[fid * 2]), dot(cf, f_base[fid * 2 + 1]));
+		f_dir[fid] = std::pow(COMPLEX(dot(cf, f_base[fid * 2]), dot(cf, f_base[fid * 2 + 1])), 4);
 	}
-
 	vector<int> id2sln(fnum, -1);
 	vector<int> sln2id(0);
 	int count = 0;
@@ -75,45 +74,54 @@ void crossfieldCreator(PolyMesh* mesh, std::vector<int>& cons_id, std::vector<MV
 	vector<Eigen::Triplet<COMPLEX>> tris;
 
 	count = 0;
-	for (FaceIter f_it = mesh->polyfaces_begin(), f_end = mesh->polyfaces_end(); f_it != f_end; ++f_it) 
+	for (FaceIter f_it = mesh->polyfaces_begin(), f_end = mesh->polyfaces_end(); f_it != f_end; ++f_it)
 	{
 		int id_f = (*f_it)->index();
-		if (status[id_f] == 0) {
-			COMPLEX sum = 0;
-			for (FaceHalfEdgeIter fh_it = mesh->fhe_iter(*f_it); fh_it.isValid(); fh_it++) 
+
+		COMPLEX sum = 0;
+		for (FaceHalfEdgeIter fh_it = mesh->fhe_iter(*f_it); fh_it.isValid(); fh_it++)
+		{
+			if (!mesh->isBoundary((*fh_it)->edge()))
 			{
-				if (!mesh->isBoundary((*fh_it)->edge())) 
+				MVector3 p1, p2;
+				MPolyFace* f_g;
+				p1 = (*fh_it)->toVertex()->position();
+				p2 = (*fh_it)->fromVertex()->position();
+				f_g = (*fh_it)->pair()->polygon();
+				int id_g = f_g->index();
+				if (id_f < id_g)
 				{
-					MVector3 p1, p2;
-					MPolyFace* f_g;
-					p1 = (*fh_it)->toVertex()->position();
-					p2 = (*fh_it)->fromVertex()->position();
-					f_g = (*fh_it)->pair()->polygon();
-					int id_g = f_g->index();
-					if (id_f < id_g)
+					MVector3 e = (p2 - p1).normalized();
+
+					COMPLEX e_f = COMPLEX(dot(e, f_base[id_f * 2]), dot(e, f_base[id_f * 2 + 1]));
+					COMPLEX e_g = COMPLEX(dot(e, f_base[id_g * 2]), dot(e, f_base[id_g * 2 + 1]));
+
+					COMPLEX e_f_c_4 = pow(conj(e_f), 4);
+					COMPLEX e_g_c_4 = pow(conj(e_g), 4);
+
+					if (status[id_f] == 1 && status[id_g] == 1)continue;
+					if (status[id_f] == 0)
 					{
-						MVector3 e = (p2 - p1).normalized();
-
-						COMPLEX e_f = COMPLEX(dot(e, f_base[id_f * 2]), dot(e, f_base[id_f * 2 + 1]));
-						COMPLEX e_g = COMPLEX(dot(e, f_base[id_g * 2]), dot(e, f_base[id_g * 2 + 1]));
-
-						COMPLEX e_f_c_4 = pow(conj(e_f), 4);
-						COMPLEX e_g_c_4 = pow(conj(e_g), 4);
-
 						tris.push_back(Eigen::Triplet<COMPLEX>(count, id2sln[id_f], e_f_c_4));
-						if (status[id_g] == 0) 
-						{
-							tris.push_back(Eigen::Triplet<COMPLEX>(count, id2sln[id_g], -e_g_c_4));
-						}
-						else
-						{
-							b_pre[count] += e_g_c_4 * f_dir[id_g];
-						}
-						count++;
 					}
+					else
+					{
+						b_pre[count] += -e_f_c_4 * f_dir[id_f];
+					}
+					if (status[id_g] == 0)
+					{
+						tris.push_back(Eigen::Triplet<COMPLEX>(count, id2sln[id_g], -e_g_c_4));
+					}
+					else
+					{
+						b_pre[count] += e_g_c_4 * f_dir[id_g];
+					}
+
+					count++;
 				}
 			}
 		}
+
 	}
 	A.resize(count, sln2id.size());
 	b.resize(count);
@@ -161,7 +169,7 @@ void loadConstrains(const std::string& filename, std::vector<int>& cons_id, std:
 void writeCrossField(const std::string& filename, std::vector<MVector3>& crossfield)
 {
 	std::fstream ofile(filename.c_str(), std::ios_base::out);
-	int num=crossfield.size();
+	int num = crossfield.size();
 	ofile << num << std::endl;
 	for (int i = 0; i < num; i++)
 	{
